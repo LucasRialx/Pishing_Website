@@ -1,4 +1,4 @@
-# Pishing_Website - Diga X
+# Pishing_Website
 
 Este projeto permite capturar uma imagem da câmera do usuário e adicionar a localização como texto na imagem capturada.
 
