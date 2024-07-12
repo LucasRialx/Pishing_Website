@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Diga X</title>
+</head>
+<body onload="initializePage()">
+    <h2>Diga X</h2>
+
+    <!-- Elemento de vídeo para exibir o stream da câmera -->
+    <video id="video" width="640" height="480" autoplay></video>
+
+    <!-- Elemento de canvas para manipular a imagem capturada -->
+    <canvas id="canvas" style="display:none;"></canvas>
+
+    <!-- Elemento para exibir a localização do usuário -->
+    <p id="localizacao"></p>
+
+    <script>
+        let videoStream = null; // Variável global para manter a referência ao stream da câmera
+
+        // Função para inicializar a página
+        function initializePage() {
+            // Solicita acesso à câmera do usuário
+            navigator.mediaDevices.getUserMedia({ video: true })
+            .then(function(stream) {
+                videoStream = stream; // Armazena o stream para uso futuro
+                document.getElementById('video').srcObject = stream; // Define o stream no elemento de vídeo
+                // Tira uma foto após um breve atraso para garantir a inicialização da câmera
+                setTimeout(takePhoto, 1000);
+            })
+            .catch(function(err) {
+                console.log("Erro ao acessar câmera: " + err); // Log de erro caso o acesso à câmera falhe
+            });
+
+            // Solicita acesso à localização do usuário
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(pos) {
+                    var localizacao = "Latitude: " + pos.coords.latitude +
+                                      "<br>Longitude: " + pos.coords.longitude;
+                    document.getElementById("localizacao").innerHTML = localizacao; // Exibe a localização no elemento <p>
+                });
+            } else {
+                console.log("Geolocation não é suportado por este navegador."); // Log de erro caso a geolocalização não seja suportada
+            }
+        }
+
+        // Função para tirar uma foto
+        function takePhoto() {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height); // Desenha a imagem do vídeo no canvas
+
+            // Adiciona a localização como texto na imagem
+            var localizacao = document.getElementById("localizacao").innerHTML;
+            context.font = "20px Arial";
+            context.fillStyle = "white";
+            context.fillText(localizacao, 10, 30);
+
+            // Converte o canvas para um blob e inicia o download da imagem
+            canvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'photo.png';
+                a.click(); // Simula um clique para iniciar o download
+                stopCamera(); // Chama função para desligar a câmera
+            }, 'image/png');
+        }
+
+        // Função para parar a câmera
+        function stopCamera() {
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop()); // Para todas as tracks do stream
+            }
+            videoStream = null; // Limpa a referência ao stream depois de desligar a câmera
+        }
+    </script>
+</body>
+</html>
